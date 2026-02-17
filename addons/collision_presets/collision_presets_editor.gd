@@ -240,10 +240,24 @@ func _on_new_pressed():
 			dialog.queue_free()
 			return
 		
-		layer_spin.value = 1
-		mask_spin.value = 1
+		var new_layer := 1
+		var new_mask := 1
+		
+		if is_instance_valid(target):
+			if "collision_layer" in target:
+				new_layer = target.collision_layer
+			if "collision_mask" in target:
+				new_mask = target.collision_mask
+		
+		layer_spin.value = new_layer
+		mask_spin.value = new_mask
 		set_default_button.disabled = false
-		_save_preset(new_name, 1, 1)
+		_save_preset(new_name, new_layer, new_mask)
+		
+		# Open edit section automatically
+		edit_button.button_pressed = true
+		_on_edit_toggled(true)
+		
 		dialog.queue_free()
 	)
 	
