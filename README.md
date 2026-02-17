@@ -1,4 +1,6 @@
 # Godot Collision Presets
+<img width="150" height="150" alt="collision_presets_logo" src="https://github.com/user-attachments/assets/8d2c40ce-2669-4fe1-8083-37110eb11f43" />
+
 Turn messy fiddling with collision layers and masks into presets that you can easily apply to your nodes.
 
 ### Overview
