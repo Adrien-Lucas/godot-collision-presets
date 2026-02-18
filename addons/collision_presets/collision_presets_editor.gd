@@ -149,6 +149,48 @@ func _notification(what):
 	if what == NOTIFICATION_READY:
 		if is_instance_valid(edit_button):
 			edit_button.icon = get_theme_icon("Edit", "EditorIcons")
+		set_process(true)
+
+func _process(_delta):
+	if not is_instance_valid(target):
+		return
+	
+	var changed := false
+	if "collision_layer" in target:
+		var target_layer = int(target.collision_layer)
+		if target_layer != int(layer_spin.value):
+			layer_spin.set_block_signals(true)
+			layer_spin.value = target_layer
+			layer_spin.set_block_signals(false)
+			changed = true
+	
+	if "collision_mask" in target:
+		var target_mask = int(target.collision_mask)
+		if target_mask != int(mask_spin.value):
+			mask_spin.set_block_signals(true)
+			mask_spin.value = target_mask
+			mask_spin.set_block_signals(false)
+			changed = true
+	
+	if changed:
+		# If it was changed externally, we should reflect that it's now custom
+		# But only if it's not already set to custom or something else
+		# But when in edit mode, it should NEVER switch to custom
+		if edit_container.visible:
+			return
+		
+		var current_preset = CollisionPresetsAPI.get_node_preset(target)
+		if current_preset != "__custom__":
+			# Check if it matches any existing preset exactly
+			var matched := false
+			for p in database.presets:
+				if p.layer == target.collision_layer and p.mask == target.collision_mask:
+					# It matches a preset, but we might want to be careful about auto-selecting it
+					# For now, let's just set it to custom to be safe, or we could try to find the match
+					# The requirement just asked to update spinboxes.
+					pass
+			
+			_set_to_custom()
 
 ## Called when edit button is toggled
 func _on_edit_toggled(toggled_on: bool):
@@ -168,6 +210,24 @@ func _on_values_changed(_v):
 		if "collision_mask" in target and target.collision_mask != new_mask:
 			target.collision_mask = new_mask
 			changed = true
+		
+		if changed:
+			if not edit_container.visible:
+				_set_to_custom()
+
+func _set_to_custom():
+	if not is_instance_valid(target):
+		return
+	
+	target.set_meta(CollisionPresetsConstants.META_KEY, "__custom__")
+	if target.has_meta(CollisionPresetsConstants.META_ID_KEY):
+		target.remove_meta(CollisionPresetsConstants.META_ID_KEY)
+	
+	preset_dropdown.set_block_signals(true)
+	preset_dropdown.select(preset_dropdown.item_count - 1) # Custom
+	preset_dropdown.set_block_signals(false)
+	edit_button.disabled = true
+	set_default_button.disabled = true
 		
 ## Called when preset is selected in dropdown
 func _on_preset_selected(index):
@@ -294,6 +354,10 @@ func _on_save_pressed():
 			p = sorted_presets[idx - 1]
 	
 	_save_preset(new_name, int(layer_spin.value), int(mask_spin.value), p)
+	
+	# Close the edit panel
+	edit_button.button_pressed = false
+	_on_edit_toggled(false)
 
 ## Helper to save a preset to the database and update UI
 func _save_preset(p_name: String, p_layer: int, p_mask: int, p: CollisionPreset = null):
