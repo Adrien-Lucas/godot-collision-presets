@@ -398,7 +398,12 @@ func _refresh_dropdown():
 	else:
 		preset_dropdown.add_item("Default (%s)" % default_p.name)
 	
-	for p in database.presets:
+	# Sorts the list in alphabetical order
+	var sorted_presets := database.presets.duplicate()
+	sorted_presets.sort_custom(func(a, b):
+		return a.name.to_lower() < b.name.to_lower())
+	
+	for p in sorted_presets:
 		preset_dropdown.add_item(p.name)
 	
 	preset_dropdown.add_item("Custom")
