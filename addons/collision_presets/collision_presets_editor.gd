@@ -4,6 +4,7 @@ extends VBoxContainer
 ## Target node and database instance
 var target: Node
 var database: CollisionPresetsDatabase
+var sorted_presets: Array[CollisionPreset] = []
 
 ## UI elements
 var preset_dropdown: OptionButton
@@ -50,8 +51,8 @@ func set_target(obj):
 		else:
 			# Find preset index by name (which now handles ID lookup internally)
 			var found := -1
-			for i in range(database.presets.size()):
-				if database.presets[i].name == stored_name:
+			for i in range(sorted_presets.size()):
+				if sorted_presets[i].name == stored_name:
 					found = i
 					break
 			if found >= 0:
@@ -196,7 +197,7 @@ func _on_preset_selected(index):
 		return
 	
 	edit_button.disabled = false
-	var p := database.presets[index - 1]
+	var p := sorted_presets[index - 1]
 	name_edit.text = p.name
 	set_default_button.disabled = (database.default_preset_id == p.id)
 	
@@ -288,9 +289,9 @@ func _on_save_pressed():
 			break
 	
 	if p == null:
-		var idx := preset_dropdown.get_selected_id()
-		if idx > 0 and (idx - 1) < database.presets.size():
-			p = database.presets[idx - 1]
+		var idx := preset_dropdown.selected
+		if idx > 0 and (idx - 1) < sorted_presets.size():
+			p = sorted_presets[idx - 1]
 	
 	_save_preset(new_name, int(layer_spin.value), int(mask_spin.value), p)
 
@@ -313,8 +314,8 @@ func _save_preset(p_name: String, p_layer: int, p_mask: int, p: CollisionPreset 
 	CollisionPresetsAPI.generate_preset_constants_script(database)
 	
 	# Select saved preset and update target metadata
-	for i in range(database.presets.size()):
-		if database.presets[i] == p:
+	for i in range(sorted_presets.size()):
+		if sorted_presets[i] == p:
 			preset_dropdown.select(i + 1)
 			if is_instance_valid(target):
 				CollisionPresetsAPI.apply_preset(target, p.name)
@@ -326,11 +327,11 @@ func _save_preset(p_name: String, p_layer: int, p_mask: int, p: CollisionPreset 
 
 ## Called when "Delete" button is pressed in UI
 func _on_delete_pressed():
-	var idx := preset_dropdown.get_selected_id()
-	if idx <= 0 or (idx - 1) >= database.presets.size():
+	var idx := preset_dropdown.selected
+	if idx <= 0 or (idx - 1) >= sorted_presets.size():
 		return
 	
-	var p = database.presets[idx - 1]
+	var p = sorted_presets[idx - 1]
 	
 	var dialog := ConfirmationDialog.new()
 	dialog.title = "Delete Preset"
@@ -339,7 +340,11 @@ func _on_delete_pressed():
 	dialog.confirmed.connect(func():
 		if database.default_preset_id == p.id:
 			database.default_preset_id = ""
-		database.presets.remove_at(idx - 1)
+		
+		var actual_idx = database.presets.find(p)
+		if actual_idx != -1:
+			database.presets.remove_at(actual_idx)
+		
 		_save_database()
 		_refresh_dropdown()
 		CollisionPresetsAPI.generate_preset_constants_script(database)
@@ -363,11 +368,11 @@ func _on_delete_pressed():
 	dialog.popup_centered()
 
 func _on_set_default_pressed():
-	var idx := preset_dropdown.get_selected_id()
-	if idx <= 0 or (idx - 1) >= database.presets.size():
+	var idx := preset_dropdown.selected
+	if idx <= 0 or (idx - 1) >= sorted_presets.size():
 		return
 	
-	var p = database.presets[idx - 1]
+	var p = sorted_presets[idx - 1]
 
 	var dialog := ConfirmationDialog.new()
 	dialog.title = "Set Default?"
@@ -399,7 +404,10 @@ func _refresh_dropdown():
 		preset_dropdown.add_item("Default (%s)" % default_p.name)
 	
 	# Sorts the list in alphabetical order
-	var sorted_presets := database.presets.duplicate()
+	sorted_presets = []
+	for p in database.presets:
+		sorted_presets.append(p)
+	
 	sorted_presets.sort_custom(func(a, b):
 		return a.name.to_lower() < b.name.to_lower())
 	
