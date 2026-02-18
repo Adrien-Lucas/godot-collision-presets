@@ -60,6 +60,20 @@ static func get_preset_names() -> Array[String]:
 	for p in presets_db_static.presets:
 		names.append(p.name)
 	return names
+	
+## API: Retursn the collision layer of multiple presets.
+static func get_combined_presets_layer(names: Array[String]) -> int:
+	var layer := 0
+	for name in names:
+		layer |= get_preset_layer(name)
+	return layer
+	
+## API: Returns the collision mask of multiple presets.
+static func get_combined_presets_mask(names: Array[String]) -> int:
+	var mask := 0
+	for name in names:
+		mask |= get_preset_mask(name)
+	return mask
 
 ## API: Returns the preset name of a node.
 static func get_node_preset(node: Node) -> String:
