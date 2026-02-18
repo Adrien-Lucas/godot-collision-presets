@@ -5,8 +5,7 @@ var inspector_plugin
 
 ## Add inspector plugin on plugin enable
 func _enter_tree():
-	var inspector_path = get_script().resource_path.get_base_dir().path_join("collision_presets_inspector.gd")
-	inspector_plugin = load(inspector_path).new()
+	inspector_plugin = load(CollisionPresetsConstants.INSPECTOR_SCRIPT_PATH).new()
 	add_inspector_plugin(inspector_plugin)
 	# Ensure the runtime applier is registered as an autoload so presets are applied when the game runs
 	if not ProjectSettings.has_setting("autoload/%s" % CollisionPresetsConstants.AUTOLOAD_NAME):
