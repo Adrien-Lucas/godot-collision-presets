@@ -399,7 +399,7 @@ func _refresh_dropdown():
 		preset_dropdown.add_item("Default (%s)" % default_p.name)
 	
 	# Sorts the list in alphabetical order
-	var sorted_presets = database.presets.duplicate()
+	var sorted_presets := database.presets.duplicate()
 	sorted_presets.sort_custom(func(a, b):
 		return a.name.to_lower() < b.name.to_lower())
 	
