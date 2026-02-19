@@ -22,18 +22,18 @@ Once a preset is defined in the editor, you can apply it in your scripts using t
 extends CharacterBody3D
 
 func _ready():
-    # Automatically apply the "Player" preset
-    CollisionPresetsAPI.set_node_preset(self, CollisionPresets.Player)
+	# Automatically apply the "Player" preset
+	CollisionPresetsAPI.set_node_preset(self, CollisionPresets.Player)
 ```
 
-Or check a preset's mask value for raycasting:
+Or check multiple presets' mask value for raycasting:
 ```gdscript
 var query := PhysicsRayQueryParameters3D.create(from, to)
 
-var collision_preset_list = [CollisionPresets.WorldStatic, CollisionPresets.Player]
-for preset_name in collision_preset_list:
-    var preset_layer = CollisionPresetsAPI.get_preset_layer(preset_name)
-    query.collision_mask |= preset_layer # Combine multiple layer bitmasks
+# Combine multiple presets into a single mask
+var presets = [CollisionPresets.WorldStatic, CollisionPresets.Player]
+query.collision_mask = CollisionPresetsAPI.get_combined_presets_layer(presets)
+
 var result := space_state.intersect_ray(query)
 ```
 
@@ -45,13 +45,19 @@ var result := space_state.intersect_ray(query)
 *   **Type-Safe Constants**: Automatically generates a `CollisionPresets` class with constants for all your preset names, enabling autocomplete and preventing typos.
 *   **Runtime Sync**: An autoload ensures that any node with a preset assigned in the editor gets the correct layer and mask values when the game starts.
 *   **ID-Based Robustness**: Presets use unique IDs internally, so renaming a preset won't break your existing node assignments.
+*   **Automatic Migration**: Move the saving location of the presets database and the generated constants without breaking existing preset assignments.
 
 ### Short Documentation
 
+#### Project Settings (Physics/Collision Presets)
+*   `collision_presets_directory`: Specifies the directory where the presets database and generated constants script are saved. Defaults to `res://collision-presets/`.
+
 #### API Reference (`CollisionPresetsAPI`)
 *   `get_preset_layer(name)` / `get_preset_mask(name)`: Retrieves the raw integer values for a specific preset.
+*   `get_combined_presets_layer(names)` / `get_combined_presets_mask(names)`: Combines multiple presets into a single bitmask integer.
 *   `set_node_preset(node, preset_name)`: Sets a preset and updates the node's metadata (safe for `@tool` scripts).
 *   `get_node_preset(node)`: Returns the name of the preset currently assigned to a node.
+*   `get_preset_names()`: Returns a list of all defined preset names.
 
 #### Generated Constants (`CollisionPresets`)
 The plugin generates a script at `res://addons/collision_presets/preset_names.gd` containing:
