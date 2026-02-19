@@ -7,8 +7,48 @@ static var presets_db_static: CollisionPresetsDatabase
 ## Loads presets resource from disk.
 static func _load_static_presets():
 	if presets_db_static == null:
-		if ResourceLoader.exists(CollisionPresetsConstants.PRESET_DATABASE_PATH):
-			presets_db_static = ResourceLoader.load(CollisionPresetsConstants.PRESET_DATABASE_PATH)
+		var path := CollisionPresetsConstants.PRESET_DATABASE_PATH
+		if not ResourceLoader.exists(path):
+			# Migration/Fallback: check old locations
+			var migration_paths := [
+				(CollisionPresetsConstants as Script).resource_path.get_base_dir().path_join("presets.tres"), # Original plugin dir
+				"res://collision_presets/presets.tres" # Previous default project-level dir
+			]
+			
+			var found_old_path := ""
+			for p in migration_paths:
+				if p != path and ResourceLoader.exists(p):
+					found_old_path = p
+					break
+			
+			if not found_old_path.is_empty():
+				# Move to new location if it exists in an old one
+				var dir := path.get_base_dir()
+				if not DirAccess.dir_exists_absolute(dir):
+					DirAccess.make_dir_recursive_absolute(dir)
+				
+				# Log migration to help user track their files
+				print("CollisionPresets: Migrating database from ", found_old_path, " to ", path)
+				
+				var err = DirAccess.rename_absolute(found_old_path, path)
+				if err != OK:
+					printerr("CollisionPresets: Failed to migrate database: ", err)
+					return
+
+				# Also try to move the generated constants script if it exists in the same old directory
+				var old_names_path := found_old_path.get_base_dir().path_join("preset_names.gd")
+				var new_names_path := CollisionPresetsConstants.PRESET_NAMES_PATH
+				if FileAccess.file_exists(old_names_path) and old_names_path != new_names_path:
+					print("CollisionPresets: Migrating constants script from ", old_names_path, " to ", new_names_path)
+					DirAccess.rename_absolute(old_names_path, new_names_path)
+			else:
+				# Create directory for new location if it doesn't exist
+				var dir := path.get_base_dir()
+				if not DirAccess.dir_exists_absolute(dir):
+					DirAccess.make_dir_recursive_absolute(dir)
+				
+		if ResourceLoader.exists(path):
+			presets_db_static = ResourceLoader.load(path)
 
 ## API: Returns a preset object by name.
 static func get_preset(name: String) -> CollisionPreset:
@@ -37,9 +77,9 @@ static func apply_preset(object: Node, name: String) -> bool:
 		if "collision_mask" in object:
 			object.collision_mask = p.mask
 		# Set BOTH name and ID for backward compatibility and robustness.
-		object.set_meta(CollisionPresetsConstants.META_KEY, p.name)
+		object.set_meta(CollisionPresetsConstants.META_KEY, p.name as StringName)
 		if not p.id.is_empty():
-			object.set_meta(CollisionPresetsConstants.META_ID_KEY, p.id)
+			object.set_meta(CollisionPresetsConstants.META_ID_KEY, p.id as StringName)
 		return true
 	return false
 
@@ -118,7 +158,7 @@ static func set_node_preset(node: Node, preset_name: String) -> bool:
 
 	if preset_name == "__custom__":
 		# Custom: set metadata to __custom__ and do nothing else
-		node.set_meta(CollisionPresetsConstants.META_KEY, "__custom__")
+		node.set_meta(CollisionPresetsConstants.META_KEY, "__custom__" as StringName)
 		if node.has_meta(CollisionPresetsConstants.META_ID_KEY):
 			node.remove_meta(CollisionPresetsConstants.META_ID_KEY)
 		return true
