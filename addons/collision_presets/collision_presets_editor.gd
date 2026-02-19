@@ -482,32 +482,32 @@ func _refresh_dropdown():
 
 ## Loads or creates presets database from file
 func _load_or_create():
-	if ResourceLoader.exists(CollisionPresetsConstants.PRESET_DATABASE_PATH):
-		database = ResourceLoader.load(CollisionPresetsConstants.PRESET_DATABASE_PATH)
-		if database == null:
-			database = CollisionPresetsDatabase.new()
-		else:
-			# Migration: default_preset_name -> default_preset_id
-			var migration_needed := false
-			if database.has_method("get") and database.get("default_preset_name") != null:
-				var old_name = database.get("default_preset_name")
-				if typeof(old_name) == TYPE_STRING and not old_name.is_empty() and database.default_preset_id.is_empty():
-					for p in database.presets:
-						if p.name == old_name:
-							database.default_preset_id = p.id
-							migration_needed = true
-							break
-			
-			# Ensure all presets have IDs for robustness
-			var changed := false
-			for p in database.presets:
-				if p.id.is_empty():
-					p.id = _generate_uid()
-					changed = true
-			if changed or migration_needed:
-				_save_database()
+	CollisionPresetsAPI._load_static_presets()
+	if CollisionPresetsAPI.presets_db_static != null:
+		database = CollisionPresetsAPI.presets_db_static
 	else:
 		database = CollisionPresetsDatabase.new()
+		_save_database()
+		CollisionPresetsAPI.presets_db_static = database
+	
+	# Migration: default_preset_name -> default_preset_id
+	var migration_needed := false
+	if database.has_method("get") and database.get("default_preset_name") != null:
+		var old_name = database.get("default_preset_name")
+		if typeof(old_name) == TYPE_STRING and not old_name.is_empty() and database.default_preset_id.is_empty():
+			for p in database.presets:
+				if p.name == old_name:
+					database.default_preset_id = p.id
+					migration_needed = true
+					break
+	
+	# Ensure all presets have IDs for robustness
+	var changed := false
+	for p in database.presets:
+		if p.id.is_empty():
+			p.id = _generate_uid()
+			changed = true
+	if changed or migration_needed:
 		_save_database()
 
 ## Saves presets database to file

@@ -5,15 +5,18 @@ class_name CollisionPresetsAPI
 static var presets_db_static: CollisionPresetsDatabase
 
 ## Loads presets resource from disk.
-static func _load_static_presets():
+static func _load_static_presets(previous_path: String = ""):
 	if presets_db_static == null:
 		var path := CollisionPresetsConstants.PRESET_DATABASE_PATH
 		if not ResourceLoader.exists(path):
 			# Migration/Fallback: check old locations
 			var migration_paths := [
 				(CollisionPresetsConstants as Script).resource_path.get_base_dir().path_join("presets.tres"), # Original plugin dir
-				"res://collision_presets/presets.tres" # Previous default project-level dir
+				"res://collision_presets/presets.tres", # Original default project-level dir
 			]
+			
+			if not previous_path.is_empty():
+				migration_paths.append(previous_path.path_join("presets.tres"))
 			
 			var found_old_path := ""
 			for p in migration_paths:
