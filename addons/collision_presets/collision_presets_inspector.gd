@@ -12,4 +12,3 @@ func _parse_category(object, category):
 		var ui = ui_scene.new()
 		ui.set_target(object)
 		add_custom_control(ui)
-	return false
