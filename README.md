@@ -10,7 +10,7 @@ Godot already provides 32 collision layers, but managing them across large proje
 
 | BEFORE | AFTER |
 |---|---|
-| ![godot windows editor dev x86_64_n4lsLj8fD1](https://github.com/user-attachments/assets/cb8f55e3-90ce-4657-a0f9-1b8364b36cbe) | ![godot windows editor dev x86_64_DiAuice1ji-00 00 00 000-00 00 08 701](https://github.com/user-attachments/assets/0323e0a5-dbfd-4168-9c8f-4f02073c2c59) |
+| ![godot windows editor dev x86_64_n4lsLj8fD1](https://github.com/user-attachments/assets/cb8f55e3-90ce-4657-a0f9-1b8364b36cbe) |  ![godot windows editor dev x86_64_2sRXi7W5rf-00 00 00 000-00 00 10 356](https://github.com/user-attachments/assets/5e314058-55af-41ec-94e4-d4c2a7943830)|
 
 
 ### Minimal Examples
