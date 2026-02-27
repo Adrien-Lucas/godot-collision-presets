@@ -31,9 +31,13 @@ func set_target(obj):
 	if is_instance_valid(target):
 		# Default to current values on the node
 		if "collision_layer" in target:
+			layer_spin.set_block_signals(true)
 			layer_spin.value = target.collision_layer
+			layer_spin.set_block_signals(false)
 		if "collision_mask" in target:
+			mask_spin.set_block_signals(true)
 			mask_spin.value = target.collision_mask
+			mask_spin.set_block_signals(false)
 		name_edit.text = ""
 		# Try read stored preset name from metadata and reflect it in the UI without applying
 		# Block signals while syncing UI to avoid applying to the node here
@@ -45,6 +49,19 @@ func set_target(obj):
 		if not has_any_meta:
 			preset_dropdown.select(0) # Default
 			edit_button.disabled = true
+			# Apply default preset if it exists
+			var def = CollisionPresetsAPI.get_preset_by_id(database.default_preset_id)
+			if def:
+				if "collision_layer" in target and target.collision_layer != def.layer:
+					target.collision_layer = def.layer
+					layer_spin.set_block_signals(true)
+					layer_spin.value = def.layer
+					layer_spin.set_block_signals(false)
+				if "collision_mask" in target and target.collision_mask != def.mask:
+					target.collision_mask = def.mask
+					mask_spin.set_block_signals(true)
+					mask_spin.value = def.mask
+					mask_spin.set_block_signals(false)
 		elif stored_name == "__custom__":
 			preset_dropdown.select(preset_dropdown.item_count - 1) # Custom
 			edit_button.disabled = true
@@ -61,6 +78,19 @@ func set_target(obj):
 				var current_default = CollisionPresetsAPI.get_preset_by_id(database.default_preset_id)
 				set_default_button.disabled = (current_default and current_default.name == stored_name)
 				edit_button.disabled = false
+				
+				# Apply preset values to the node when selected
+				var p = sorted_presets[found]
+				if "collision_layer" in target and target.collision_layer != p.layer:
+					target.collision_layer = p.layer
+					layer_spin.set_block_signals(true)
+					layer_spin.value = p.layer
+					layer_spin.set_block_signals(false)
+				if "collision_mask" in target and target.collision_mask != p.mask:
+					target.collision_mask = p.mask
+					mask_spin.set_block_signals(true)
+					mask_spin.value = p.mask
+					mask_spin.set_block_signals(false)
 			else:
 				preset_dropdown.select(preset_dropdown.item_count - 1) # fallback to Custom if not found
 				edit_button.disabled = true
