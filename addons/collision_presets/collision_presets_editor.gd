@@ -182,6 +182,12 @@ func _notification(what):
 		set_process(true)
 
 func _process(_delta):
+	if CollisionPresetsAPI.check_for_external_changes():
+		_load_or_create()
+		_refresh_dropdown()
+		if is_instance_valid(target):
+			set_target(target)
+	
 	if not is_instance_valid(target):
 		return
 	
@@ -543,6 +549,7 @@ func _load_or_create():
 ## Saves presets database to file
 func _save_database():
 	ResourceSaver.save(database, CollisionPresetsConstants.PRESET_DATABASE_PATH)
+	CollisionPresetsAPI.check_for_external_changes() # Update the timestamp so we don't immediately reload
 
 func _generate_uid() -> String:
 	return str(ResourceUID.create_id())

@@ -3,11 +3,14 @@ extends Node
 class_name CollisionPresetsAPI
 
 static var presets_db_static: CollisionPresetsDatabase
+static var _last_modified_time: int = 0
+static var _is_checking: bool = false
 
 ## Loads presets resource from disk.
 static func _load_static_presets(previous_path: String = ""):
-	if presets_db_static == null:
-		var path := CollisionPresetsConstants.PRESET_DATABASE_PATH
+	var path := CollisionPresetsConstants.PRESET_DATABASE_PATH
+	if presets_db_static == null or FileAccess.get_modified_time(path) > _last_modified_time:
+		_is_checking = true
 		if not ResourceLoader.exists(path):
 			# Migration/Fallback: check old locations
 			var migration_paths := [
@@ -50,11 +53,27 @@ static func _load_static_presets(previous_path: String = ""):
 				if not DirAccess.dir_exists_absolute(dir):
 					DirAccess.make_dir_recursive_absolute(dir)
 				
-		if ResourceLoader.exists(path):
-			presets_db_static = ResourceLoader.load(path)
+	if ResourceLoader.exists(path):
+		presets_db_static = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REPLACE)
+		_last_modified_time = FileAccess.get_modified_time(path)
+	_is_checking = false
+
+## API: Force reloads the database if the file on disk has changed.
+static func check_for_external_changes() -> bool:
+	var path := CollisionPresetsConstants.PRESET_DATABASE_PATH
+	if not ResourceLoader.exists(path):
+		return false
+	
+	var current_modified_time = FileAccess.get_modified_time(path)
+	if current_modified_time > _last_modified_time:
+		_load_static_presets()
+		return true
+	return false
 
 ## API: Returns a preset object by name.
 static func get_preset(name: String) -> CollisionPreset:
+	if Engine.is_editor_hint():
+		check_for_external_changes()
 	if presets_db_static == null: _load_static_presets()
 	for p in presets_db_static.presets:
 		if p.name == name:
@@ -65,6 +84,8 @@ static func get_preset(name: String) -> CollisionPreset:
 static func get_preset_by_id(id: String) -> CollisionPreset:
 	if id.is_empty():
 		return null
+	if Engine.is_editor_hint():
+		check_for_external_changes()
 	if presets_db_static == null: _load_static_presets()
 	for p in presets_db_static.presets:
 		if p.id == id:
@@ -98,6 +119,8 @@ static func get_preset_mask(name: String) -> int:
 
 ## API: Returns all available preset names.
 static func get_preset_names() -> Array[String]:
+	if Engine.is_editor_hint():
+		check_for_external_changes()
 	if presets_db_static == null: _load_static_presets()
 	var names: Array[String] = []
 	for p in presets_db_static.presets:
@@ -120,6 +143,8 @@ static func get_combined_presets_mask(names: Array[String]) -> int:
 
 ## API: Returns the preset name of a node.
 static func get_node_preset(node: Node) -> String:
+	if Engine.is_editor_hint():
+		check_for_external_changes()
 	if presets_db_static == null: _load_static_presets()
 	
 	# Try to find by ID first for robustness (handles renames)
@@ -142,6 +167,8 @@ static func get_node_preset(node: Node) -> String:
 
 ## API: Static way to set a preset on a node. Safe to use at tool time.
 static func set_node_preset(node: Node, preset_name: String) -> bool:
+	if Engine.is_editor_hint():
+		check_for_external_changes()
 	if presets_db_static == null: _load_static_presets()
 	
 	if preset_name == "":
@@ -175,6 +202,8 @@ static func set_node_preset(node: Node, preset_name: String) -> bool:
 ## API: Generates or refreshes a script with constants for preset names.
 static func generate_preset_constants_script(db: CollisionPresetsDatabase = null):
 	if db == null:
+		if Engine.is_editor_hint():
+			check_for_external_changes()
 		_load_static_presets()
 		db = presets_db_static
 	
