@@ -71,16 +71,16 @@ func _on_filesystem_changed() -> void:
 ## Updates the spinners and preset state when the inspector edits collision_layer or collision_mask.
 func _on_inspector_property_edited(property: StringName) -> void:
 	if not is_instance_valid(target): return
-	if property != (
-		CollisionPresetsConstants.PROP_COLLISION_LAYER
+	if (
+		property != CollisionPresetsConstants.PROP_COLLISION_LAYER
 		and property != CollisionPresetsConstants.PROP_COLLISION_MASK
 	):
 		return
 
 	var changed: bool = false
 
-	if property == (
-		CollisionPresetsConstants.PROP_COLLISION_LAYER
+	if (
+		property == CollisionPresetsConstants.PROP_COLLISION_LAYER
 		and CollisionPresetsConstants.PROP_COLLISION_LAYER in target
 	):
 		var target_layer: int = int(target.collision_layer)
@@ -90,8 +90,8 @@ func _on_inspector_property_edited(property: StringName) -> void:
 			layer_spin.set_block_signals(false)
 			changed = true
 
-	if property == (
-		CollisionPresetsConstants.PROP_COLLISION_MASK
+	if (
+		property == CollisionPresetsConstants.PROP_COLLISION_MASK
 		and CollisionPresetsConstants.PROP_COLLISION_MASK in target
 	):
 		var target_mask: int = int(target.collision_mask)
