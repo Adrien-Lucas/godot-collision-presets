@@ -229,6 +229,7 @@ func _build_ui() -> void:
 	new_button = Button.new()
 	new_button.text = "New Preset"
 	new_button.flat = true
+	new_button.tooltip_text = "Create a new collision preset and save it to be used later."
 	new_button.pressed.connect(_on_new_pressed)
 	top_hb.add_child(new_button)
 
@@ -236,6 +237,7 @@ func _build_ui() -> void:
 	edit_button.flat = true
 	edit_button.toggle_mode = true
 	edit_button.disabled = true
+	edit_button.tooltip_text = "Toggle edit mode to manage the selected preset."
 
 	# The icons are assigned in _notification once the theme is available.
 	edit_button.toggled.connect(_on_edit_toggled)
@@ -245,50 +247,79 @@ func _build_ui() -> void:
 	edit_container.visible = false
 	add_child(edit_container)
 
-	var grid := GridContainer.new()
-	grid.columns = 2
-	edit_container.add_child(grid)
+	var edit_label := Label.new()
+	edit_label.text = "Edit Preset"
+	edit_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	edit_container.add_child(edit_label)
 
-	grid.add_child(Label.new())
-	grid.get_child(grid.get_child_count() - 1).text = "Name"
+	var name_hb := HBoxContainer.new()
+	name_hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_hb.tooltip_text = "The unique identifier name for this collision preset."
+	edit_container.add_child(name_hb)
+	var name_label := Label.new()
+	name_label.text = "Name"
+	name_label.mouse_filter = Control.MOUSE_FILTER_PASS
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_hb.add_child(name_label)
 	name_edit = LineEdit.new()
-	grid.add_child(name_edit)
+	name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_hb.add_child(name_edit)
 
-	grid.add_child(Label.new())
-	grid.get_child(grid.get_child_count() - 1).text = "Layer (int)"
+	var layer_hb := HBoxContainer.new()
+	layer_hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layer_hb.tooltip_text = "Collision layer bitmask (integer). Each bit represents a physics layer this object belongs to."
+	edit_container.add_child(layer_hb)
+	var layer_label := Label.new()
+	layer_label.text = "Layer"
+	layer_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layer_hb.add_child(layer_label)
 	layer_spin = SpinBox.new()
+	layer_spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layer_spin.min_value = 0
 	layer_spin.max_value = CollisionPresetsConstants.BITMASK_MAX
 	layer_spin.step = 1
 	layer_spin.value_changed.connect(_on_values_changed)
-	grid.add_child(layer_spin)
+	layer_hb.add_child(layer_spin)
 
-	grid.add_child(Label.new())
-	grid.get_child(grid.get_child_count() - 1).text = "Mask (int)"
+	var mask_hb := HBoxContainer.new()
+	mask_hb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mask_hb.tooltip_text = "Collision mask bitmask (integer). Each bit represents a physics layer this object interacts with."
+	edit_container.add_child(mask_hb)
+	var mask_label := Label.new()
+	mask_label.text = "Mask"
+	mask_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mask_hb.add_child(mask_label)
 	mask_spin = SpinBox.new()
-	mask_spin.min_value = 0
+	mask_spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mask_spin.max_value = CollisionPresetsConstants.BITMASK_MAX
 	mask_spin.step = 1
 	mask_spin.value_changed.connect(_on_values_changed)
-	grid.add_child(mask_spin)
+	mask_hb.add_child(mask_spin)
 
 	var buttons := HBoxContainer.new()
+	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	edit_container.add_child(buttons)
 
 	save_button = Button.new()
 	save_button.text = "Save"
+	save_button.tooltip_text = "Save changes to this preset."
 	save_button.pressed.connect(_on_save_pressed)
 	buttons.add_child(save_button)
 
 	delete_button = Button.new()
 	delete_button.text = "Delete"
+	delete_button.tooltip_text = "Permanently delete this preset."
 	delete_button.pressed.connect(_on_delete_pressed)
 	buttons.add_child(delete_button)
 
 	set_default_button = Button.new()
 	set_default_button.text = "Set Default"
+	set_default_button.tooltip_text = "Make this preset the default applied to new collision nodes."
 	set_default_button.pressed.connect(_on_set_default_pressed)
 	buttons.add_child(set_default_button)
+
+	var separator := HSeparator.new()
+	edit_container.add_child(separator)
 
 
 ## Toggles the edit panel visibility and locks the dropdown while editing.
