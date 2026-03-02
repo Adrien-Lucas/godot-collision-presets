@@ -3,8 +3,8 @@ class_name CollisionPresetsAPI
 extends Node
 ## Static API for loading, querying, and applying collision presets.
 ##
-## All methods are static and safe to call from both editor and game code.
-## The database is loaded lazily on first access and re-read whenever the file changes on disk.
+## Works in both editor and runtime contexts. Preset data is loaded on first use
+## and reloaded automatically if the database file is modified externally.
 
 
 static var presets_db_static: CollisionPresetsDatabase
