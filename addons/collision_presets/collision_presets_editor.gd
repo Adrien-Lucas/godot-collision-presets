@@ -71,11 +71,18 @@ func _on_filesystem_changed() -> void:
 ## Updates the spinners and preset state when the inspector edits collision_layer or collision_mask.
 func _on_inspector_property_edited(property: StringName) -> void:
 	if not is_instance_valid(target): return
-	if property != &"collision_layer" and property != &"collision_mask": return
+	if property != (
+		CollisionPresetsConstants.PROP_COLLISION_LAYER
+		and property != CollisionPresetsConstants.PROP_COLLISION_MASK
+	):
+		return
 
 	var changed: bool = false
 
-	if property == &"collision_layer" and "collision_layer" in target:
+	if property == (
+		CollisionPresetsConstants.PROP_COLLISION_LAYER
+		and CollisionPresetsConstants.PROP_COLLISION_LAYER in target
+	):
 		var target_layer: int = int(target.collision_layer)
 		if target_layer != int(layer_spin.value):
 			layer_spin.set_block_signals(true)
@@ -83,7 +90,10 @@ func _on_inspector_property_edited(property: StringName) -> void:
 			layer_spin.set_block_signals(false)
 			changed = true
 
-	if property == &"collision_mask" and "collision_mask" in target:
+	if property == (
+		CollisionPresetsConstants.PROP_COLLISION_MASK
+		and CollisionPresetsConstants.PROP_COLLISION_MASK in target
+	):
 		var target_mask: int = int(target.collision_mask)
 		if target_mask != int(mask_spin.value):
 			mask_spin.set_block_signals(true)
@@ -93,7 +103,7 @@ func _on_inspector_property_edited(property: StringName) -> void:
 
 	if changed and not edit_container.visible:
 		var current_preset: String = CollisionPresetsAPI.get_node_preset(target)
-		if current_preset != "__custom__":
+		if current_preset != CollisionPresetsConstants.CUSTOM_PRESET_VALUE:
 			_set_to_custom()
 
 
@@ -108,12 +118,12 @@ func set_target(obj: Node) -> void:
 	target = obj
 
 	if is_instance_valid(target):
-		if "collision_layer" in target:
+		if CollisionPresetsConstants.PROP_COLLISION_LAYER in target:
 			layer_spin.set_block_signals(true)
 			layer_spin.value = target.collision_layer
 			layer_spin.set_block_signals(false)
 		
-		if "collision_mask" in target:
+		if CollisionPresetsConstants.PROP_COLLISION_MASK in target:
 			mask_spin.set_block_signals(true)
 			mask_spin.value = target.collision_mask
 			mask_spin.set_block_signals(false)
@@ -128,26 +138,34 @@ func set_target(obj: Node) -> void:
 			or target.has_meta(CollisionPresetsConstants.META_ID_KEY)
 		)
 
+		# Default
 		if not has_any_meta:
-			preset_dropdown.select(0) # Default
+			preset_dropdown.select(0)
 			edit_button.disabled = true
 
 			var def: CollisionPreset = CollisionPresetsAPI.get_preset_by_id(database.default_preset_id)
 			if def:
-				if "collision_layer" in target and target.collision_layer != def.layer:
+				if (
+					CollisionPresetsConstants.PROP_COLLISION_LAYER in target
+					and target.collision_layer != def.layer
+				):
 					target.collision_layer = def.layer
 					layer_spin.set_block_signals(true)
 					layer_spin.value = def.layer
 					layer_spin.set_block_signals(false)
 
-				if "collision_mask" in target and target.collision_mask != def.mask:
+				if (
+					CollisionPresetsConstants.PROP_COLLISION_MASK in target
+					and target.collision_mask != def.mask
+				):
 					target.collision_mask = def.mask
 					mask_spin.set_block_signals(true)
 					mask_spin.value = def.mask
 					mask_spin.set_block_signals(false)
 		
-		elif stored_name == "__custom__":
-			preset_dropdown.select(preset_dropdown.item_count - 1) # Custom
+		# Custom
+		elif stored_name == CollisionPresetsConstants.CUSTOM_PRESET_VALUE:
+			preset_dropdown.select(preset_dropdown.item_count - 1)
 			edit_button.disabled = true
 		
 		else:
@@ -159,27 +177,35 @@ func set_target(obj: Node) -> void:
 					break
 			
 			if found >= 0:
-				preset_dropdown.select(found + 1) # +1 accounts for the "Default" item
+				# +1 accounts for the "Default" item
+				preset_dropdown.select(found + 1)
 				name_edit.text = stored_name
 				var current_default: CollisionPreset = CollisionPresetsAPI.get_preset_by_id(database.default_preset_id)
 				set_default_button.disabled = (current_default and current_default.name == stored_name)
 				edit_button.disabled = false
 
 				var p: CollisionPreset = sorted_presets[found]
-				if "collision_layer" in target and target.collision_layer != p.layer:
+				if (
+					CollisionPresetsConstants.PROP_COLLISION_LAYER in target
+					and target.collision_layer != p.layer
+				):
 					target.collision_layer = p.layer
 					layer_spin.set_block_signals(true)
 					layer_spin.value = p.layer
 					layer_spin.set_block_signals(false)
 				
-				if "collision_mask" in target and target.collision_mask != p.mask:
+				if (
+					CollisionPresetsConstants.PROP_COLLISION_MASK in target
+					and target.collision_mask != p.mask
+				):
 					target.collision_mask = p.mask
 					mask_spin.set_block_signals(true)
 					mask_spin.value = p.mask
 					mask_spin.set_block_signals(false)
 			
+			# Custom (preset not found)
 			else:
-				preset_dropdown.select(preset_dropdown.item_count - 1) # Custom (preset not found)
+				preset_dropdown.select(preset_dropdown.item_count - 1)
 				edit_button.disabled = true
 
 		preset_dropdown.set_block_signals(false)
@@ -210,6 +236,7 @@ func _build_ui() -> void:
 	edit_button.flat = true
 	edit_button.toggle_mode = true
 	edit_button.disabled = true
+
 	# The icons are assigned in _notification once the theme is available.
 	edit_button.toggled.connect(_on_edit_toggled)
 	top_hb.add_child(edit_button)
@@ -231,7 +258,7 @@ func _build_ui() -> void:
 	grid.get_child(grid.get_child_count() - 1).text = "Layer (int)"
 	layer_spin = SpinBox.new()
 	layer_spin.min_value = 0
-	layer_spin.max_value = 4294967295
+	layer_spin.max_value = CollisionPresetsConstants.BITMASK_MAX
 	layer_spin.step = 1
 	layer_spin.value_changed.connect(_on_values_changed)
 	grid.add_child(layer_spin)
@@ -240,7 +267,7 @@ func _build_ui() -> void:
 	grid.get_child(grid.get_child_count() - 1).text = "Mask (int)"
 	mask_spin = SpinBox.new()
 	mask_spin.min_value = 0
-	mask_spin.max_value = 4294967295
+	mask_spin.max_value = CollisionPresetsConstants.BITMASK_MAX
 	mask_spin.step = 1
 	mask_spin.value_changed.connect(_on_values_changed)
 	grid.add_child(mask_spin)
@@ -277,10 +304,16 @@ func _on_values_changed(_v: float) -> void:
 		var new_layer: int = int(layer_spin.value)
 		var new_mask: int = int(mask_spin.value)
 
-		if "collision_layer" in target and target.collision_layer != new_layer:
+		if (
+			CollisionPresetsConstants.PROP_COLLISION_LAYER in target
+			and target.collision_layer != new_layer
+		):
 			target.collision_layer = new_layer
 			changed = true
-		if "collision_mask" in target and target.collision_mask != new_mask:
+		if (
+			CollisionPresetsConstants.PROP_COLLISION_MASK in target
+			and target.collision_mask != new_mask
+		):
 			target.collision_mask = new_mask
 			changed = true
 
@@ -293,7 +326,7 @@ func _on_values_changed(_v: float) -> void:
 func _set_to_custom() -> void:
 	if not is_instance_valid(target): return
 
-	target.set_meta(CollisionPresetsConstants.META_KEY, "__custom__")
+	target.set_meta(CollisionPresetsConstants.META_KEY, CollisionPresetsConstants.CUSTOM_PRESET_VALUE)
 	if target.has_meta(CollisionPresetsConstants.META_ID_KEY):
 		target.remove_meta(CollisionPresetsConstants.META_ID_KEY)
 
@@ -306,7 +339,8 @@ func _set_to_custom() -> void:
 
 ## Applies the selected dropdown entry to the target node and updates the editor UI.
 func _on_preset_selected(index: int) -> void:
-	if index == 0: # Default
+	# Default
+	if index == 0:
 		edit_button.disabled = true
 
 		if is_instance_valid(target):
@@ -319,17 +353,21 @@ func _on_preset_selected(index: int) -> void:
 		if p:
 			_apply_preset_values_to_ui(p)
 			if is_instance_valid(target):
-				if "collision_layer" in target:
+				if CollisionPresetsConstants.PROP_COLLISION_LAYER in target:
 					target.collision_layer = p.layer
-				if "collision_mask" in target:
+				if CollisionPresetsConstants.PROP_COLLISION_MASK in target:
 					target.collision_mask = p.mask
 		return
 
-	if index == preset_dropdown.item_count - 1: # Custom
+	# Custom
+	if index == preset_dropdown.item_count - 1:
 		edit_button.disabled = true
 
 		if is_instance_valid(target):
-			target.set_meta(CollisionPresetsConstants.META_KEY, "__custom__")
+			target.set_meta(
+				CollisionPresetsConstants.META_KEY,
+				CollisionPresetsConstants.CUSTOM_PRESET_VALUE
+			)
 			if target.has_meta(CollisionPresetsConstants.META_ID_KEY):
 				target.remove_meta(CollisionPresetsConstants.META_ID_KEY)
 		return
@@ -384,10 +422,10 @@ func _on_new_pressed() -> void:
 		var new_mask: int = 1
 
 		if is_instance_valid(target):
-			if "collision_layer" in target:
+			if CollisionPresetsConstants.PROP_COLLISION_LAYER in target:
 				new_layer = target.collision_layer
 			
-			if "collision_mask" in target:
+			if CollisionPresetsConstants.PROP_COLLISION_MASK in target:
 				new_mask = target.collision_mask
 
 		layer_spin.value = new_layer
@@ -577,9 +615,16 @@ func _load_or_create() -> void:
 
 	# Migrate the legacy default_preset_name property to default_preset_id.
 	var migration_needed: bool = false
-	if database.has_method("get") and database.get("default_preset_name") != null:
-		var old_name: Variant = database.get("default_preset_name")
-		if typeof(old_name) == TYPE_STRING and not (old_name as String).is_empty() and database.default_preset_id.is_empty():
+	if (
+		database.has_method("get")
+		and database.get(CollisionPresetsConstants.LEGACY_DEFAULT_NAME_PROP) != null
+	):
+		var old_name: Variant = database.get(CollisionPresetsConstants.LEGACY_DEFAULT_NAME_PROP)
+		if (
+			typeof(old_name) == TYPE_STRING
+			and not (old_name as String).is_empty()
+			and database.default_preset_id.is_empty()
+		):
 			for p: CollisionPreset in database.presets:
 				if p.name == old_name:
 					database.default_preset_id = p.id

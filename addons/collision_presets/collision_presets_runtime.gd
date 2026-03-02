@@ -45,7 +45,7 @@ func _apply_node_preset(n: Node) -> void:
 	var preset_name: String = CollisionPresetsAPI.get_node_preset(n)
 
 	# Custom nodes are under manual control, so leave them unchanged.
-	if preset_name == "__custom__": return
+	if preset_name == CollisionPresetsConstants.CUSTOM_PRESET_VALUE: return
 
 	if not preset_name.is_empty():
 		var p: CollisionPreset = CollisionPresetsAPI.get_preset(preset_name)

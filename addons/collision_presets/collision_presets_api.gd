@@ -76,6 +76,7 @@ static func check_for_external_changes() -> bool:
 	if current_modified_time > _last_modified_time:
 		_load_static_presets()
 		return true
+	
 	return false
 
 
@@ -114,10 +115,10 @@ static func apply_preset(object: Node, name: String) -> bool:
 	var p: CollisionPreset = get_preset(name)
 
 	if p:
-		if "collision_layer" in object:
+		if CollisionPresetsConstants.PROP_COLLISION_LAYER in object:
 			object.collision_layer = p.layer
 
-		if "collision_mask" in object:
+		if CollisionPresetsConstants.PROP_COLLISION_MASK in object:
 			object.collision_mask = p.mask
 		
 		# Store both name and ID for robustness across renames.
@@ -225,9 +226,9 @@ static func set_node_preset(node: Node, preset_name: String) -> bool:
 		
 		return true
 
-	if preset_name == "__custom__":
+	if preset_name == CollisionPresetsConstants.CUSTOM_PRESET_VALUE:
 		# Mark the node as manually controlled and clear the ID reference.
-		node.set_meta(CollisionPresetsConstants.META_KEY, "__custom__" as StringName)
+		node.set_meta(CollisionPresetsConstants.META_KEY, CollisionPresetsConstants.CUSTOM_PRESET_VALUE)
 		if node.has_meta(CollisionPresetsConstants.META_ID_KEY):
 			node.remove_meta(CollisionPresetsConstants.META_ID_KEY)
 		return true
@@ -313,7 +314,7 @@ static func get_identifier(name: String, used: Dictionary = {}) -> String:
 	if not used.is_empty():
 		var base: String = out
 		var n: int = 1
-		
+
 		while used.has(out):
 			out = "%s_%d" % [base, n]
 			n += 1

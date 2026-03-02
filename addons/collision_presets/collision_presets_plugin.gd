@@ -12,17 +12,26 @@ var last_known_directory: String = ""
 
 ## Registers the inspector plugin, project settings, and runtime autoload on enable.
 func _enter_tree() -> void:
-	if not ProjectSettings.has_setting("physics/collision_presets/collision_presets_directory"):
-		ProjectSettings.set_setting("physics/collision_presets/collision_presets_directory", "res://collision_presets")
-	ProjectSettings.set_initial_value("physics/collision_presets/collision_presets_directory", "res://collision_presets")
+	if not ProjectSettings.has_setting(CollisionPresetsConstants.SETTINGS_DIRECTORY_KEY):
+		ProjectSettings.set_setting(
+			CollisionPresetsConstants.SETTINGS_DIRECTORY_KEY,
+			CollisionPresetsConstants.DEFAULT_PRESETS_DIRECTORY
+		)
+	
+	ProjectSettings.set_initial_value(
+		CollisionPresetsConstants.SETTINGS_DIRECTORY_KEY,
+		CollisionPresetsConstants.DEFAULT_PRESETS_DIRECTORY
+	)
+
 	ProjectSettings.add_property_info({
-		"name": "physics/collision_presets/collision_presets_directory",
+		"name": CollisionPresetsConstants.SETTINGS_DIRECTORY_KEY,
 		"type": TYPE_STRING,
 		"hint": PROPERTY_HINT_DIR,
 	})
 
 	last_known_directory = ProjectSettings.get_setting(
-		"physics/collision_presets/collision_presets_directory", "res://collision_presets"
+		CollisionPresetsConstants.SETTINGS_DIRECTORY_KEY,
+		CollisionPresetsConstants.DEFAULT_PRESETS_DIRECTORY
 	)
 	ProjectSettings.settings_changed.connect(_on_settings_changed)
 
@@ -30,7 +39,10 @@ func _enter_tree() -> void:
 	add_inspector_plugin(inspector_plugin)
 
 	if not ProjectSettings.has_setting("autoload/%s" % CollisionPresetsConstants.AUTOLOAD_NAME):
-		add_autoload_singleton(CollisionPresetsConstants.AUTOLOAD_NAME, CollisionPresetsConstants.AUTOLOAD_PATH)
+		add_autoload_singleton(
+			CollisionPresetsConstants.AUTOLOAD_NAME,
+			CollisionPresetsConstants.AUTOLOAD_PATH
+		)
 
 	CollisionPresetsAPI.generate_preset_constants_script()
 
@@ -46,8 +58,10 @@ func _exit_tree() -> void:
 ## Reloads the preset database when the preset directory setting changes.
 func _on_settings_changed() -> void:
 	var new_dir: String = ProjectSettings.get_setting(
-		"physics/collision_presets/collision_presets_directory", "res://collision_presets"
+		CollisionPresetsConstants.SETTINGS_DIRECTORY_KEY,
+		CollisionPresetsConstants.DEFAULT_PRESETS_DIRECTORY
 	)
+	
 	if new_dir == last_known_directory: return
 
 	CollisionPresetsAPI.presets_db_static = null
