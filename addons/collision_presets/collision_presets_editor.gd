@@ -330,6 +330,7 @@ func _build_ui() -> void:
 func _on_edit_toggled(toggled_on: bool) -> void:
 	edit_container.visible = toggled_on
 	preset_dropdown.disabled = toggled_on
+	new_button.disabled = toggled_on
 
 
 ## Applies the current spinner values to the target node and switches to custom if they changed.
@@ -383,15 +384,15 @@ func _on_preset_selected(index: int) -> void:
 				target.remove_meta(CollisionPresetsConstants.META_KEY)
 			if target.has_meta(CollisionPresetsConstants.META_ID_KEY):
 				target.remove_meta(CollisionPresetsConstants.META_ID_KEY)
-		var p: CollisionPreset = CollisionPresetsAPI.get_preset_by_id(database.default_preset_id)
+		var default_preset: CollisionPreset = CollisionPresetsAPI.get_preset_by_id(database.default_preset_id)
 
-		if p:
-			_apply_preset_values_to_ui(p)
+		if default_preset:
+			_apply_preset_values_to_ui(default_preset)
 			if is_instance_valid(target):
 				if CollisionPresetsConstants.PROP_COLLISION_LAYER in target:
-					target.collision_layer = p.layer
+					target.collision_layer = default_preset.layer
 				if CollisionPresetsConstants.PROP_COLLISION_MASK in target:
-					target.collision_mask = p.mask
+					target.collision_mask = default_preset.mask
 		return
 
 	# Custom

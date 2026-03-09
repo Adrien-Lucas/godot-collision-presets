@@ -1,6 +1,6 @@
 @tool
 class_name CollisionPresetsAPI
-extends Node
+extends RefCounted
 ## Static API for loading, querying, and applying collision presets.
 ##
 ## Works in both editor and runtime contexts. Preset data is loaded on first use
@@ -10,6 +10,15 @@ extends Node
 static var presets_db_static: CollisionPresetsDatabase
 static var _last_modified_time: int = 0
 static var _is_checking: bool = false
+
+
+## Ensures the preset database is loaded and up to date.
+static func _ensure_loaded() -> void:
+	if Engine.is_editor_hint():
+		check_for_external_changes()
+	
+	if not presets_db_static:
+		_load_static_presets()
 
 
 ## Loads the preset database from disk, migrating from legacy locations if needed.
@@ -81,15 +90,11 @@ static func check_for_external_changes() -> bool:
 
 
 ## Returns the preset with the given display name, or null if not found.
-static func get_preset(name: String) -> CollisionPreset:
-	if Engine.is_editor_hint():
-		check_for_external_changes()
-	
-	if presets_db_static == null:
-		_load_static_presets()
+static func get_preset(preset_name: String) -> CollisionPreset:
+	_ensure_loaded()
 	
 	for p: CollisionPreset in presets_db_static.presets:
-		if p.name == name: return p
+		if p.name == preset_name: return p
 
 	return null
 
@@ -98,11 +103,7 @@ static func get_preset(name: String) -> CollisionPreset:
 static func get_preset_by_id(id: String) -> CollisionPreset:
 	if id.is_empty(): return null
 	
-	if Engine.is_editor_hint():
-		check_for_external_changes()
-	
-	if presets_db_static == null:
-		_load_static_presets()
+	_ensure_loaded()
 	
 	for p: CollisionPreset in presets_db_static.presets:
 		if p.id == id: return p
@@ -111,8 +112,8 @@ static func get_preset_by_id(id: String) -> CollisionPreset:
 
 
 ## Applies the named preset's layer and mask to the given node and stores metadata on it.
-static func apply_preset(object: Node, name: String) -> bool:
-	var p: CollisionPreset = get_preset(name)
+static func apply_preset(object: Node, preset_name: String) -> bool:
+	var p: CollisionPreset = get_preset(preset_name)
 
 	if p:
 		if CollisionPresetsConstants.PROP_COLLISION_LAYER in object:
@@ -133,24 +134,20 @@ static func apply_preset(object: Node, name: String) -> bool:
 
 
 ## Returns the collision layer bitmask of the named preset, or 0 if not found.
-static func get_preset_layer(name: String) -> int:
-	var p: CollisionPreset = get_preset(name)
+static func get_preset_layer(preset_name: String) -> int:
+	var p: CollisionPreset = get_preset(preset_name)
 	return p.layer if p else 0
 
 
 ## Returns the collision mask bitmask of the named preset, or 0 if not found.
-static func get_preset_mask(name: String) -> int:
-	var p: CollisionPreset = get_preset(name)
+static func get_preset_mask(preset_name: String) -> int:
+	var p: CollisionPreset = get_preset(preset_name)
 	return p.mask if p else 0
 
 
 ## Returns the display names of all currently defined presets.
 static func get_preset_names() -> Array[String]:
-	if Engine.is_editor_hint():
-		check_for_external_changes()
-	
-	if presets_db_static == null:
-		_load_static_presets()
+	_ensure_loaded()
 	
 	var names: Array[String] = []
 	for p: CollisionPreset in presets_db_static.presets:
@@ -162,25 +159,22 @@ static func get_preset_names() -> Array[String]:
 ## Returns the combined collision layer of all named presets using bitwise OR.
 static func get_combined_presets_layer(names: Array[String]) -> int:
 	var layer: int = 0
-	for name: String in names:
-		layer |= get_preset_layer(name)
+	for preset_name: String in names:
+		layer |= get_preset_layer(preset_name)
 	return layer
 
 
 ## Returns the combined collision mask of all named presets using bitwise OR.
 static func get_combined_presets_mask(names: Array[String]) -> int:
 	var mask: int = 0
-	for name: String in names:
-		mask |= get_preset_mask(name)
+	for preset_name: String in names:
+		mask |= get_preset_mask(preset_name)
 	return mask
 
 
 ## Returns the active preset name on the given node, resolved by ID when possible.
 static func get_node_preset(node: Node) -> String:
-	if Engine.is_editor_hint():
-		check_for_external_changes()
-	if presets_db_static == null:
-		_load_static_presets()
+	_ensure_loaded()
 
 	# Prefer ID-based lookup to survive preset renames.
 	if node.has_meta(CollisionPresetsConstants.META_ID_KEY):
@@ -201,11 +195,7 @@ static func get_node_preset(node: Node) -> String:
 
 ## Sets a preset on a node by name, updating its collision values and metadata.
 static func set_node_preset(node: Node, preset_name: String) -> bool:
-	if Engine.is_editor_hint():
-		check_for_external_changes()
-	
-	if presets_db_static == null:
-		_load_static_presets()
+	_ensure_loaded()
 
 	if preset_name.is_empty():
 		# Remove stored metadata and apply the default preset values.
@@ -286,8 +276,8 @@ static func generate_preset_constants_script(db: CollisionPresetsDatabase = null
 
 
 ## Converts an arbitrary preset name into a valid, unique GDScript constant identifier.
-static func get_identifier(name: String, used: Dictionary = {}) -> String:
-	var s: String = name.strip_edges()
+static func get_identifier(preset_name: String, used: Dictionary = {}) -> String:
+	var s: String = preset_name.strip_edges()
 	if s.is_empty():
 		s = "Preset"
 
