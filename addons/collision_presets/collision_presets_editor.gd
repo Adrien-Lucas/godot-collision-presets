@@ -127,6 +127,10 @@ func set_target(obj: Node) -> void:
 			mask_spin.set_block_signals(true)
 			mask_spin.value = target.collision_mask
 			mask_spin.set_block_signals(false)
+
+		# Skip preset enforcement in edit mode, because the spinboxes hold the working values.
+		if edit_container.visible: return
+
 		name_edit.text = ""
 
 		# Block signals while syncing the UI to avoid re-applying changes.
