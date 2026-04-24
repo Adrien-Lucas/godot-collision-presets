@@ -3,7 +3,7 @@ class_name CollisionPresetsConstants
 extends RefCounted
 ## Shared constants and computed paths used throughout the Collision Presets plugin.
 ##
-## This class is separate from the main plugin script to avoid circular dependencies 
+## This class is separate from the main plugin script to avoid circular dependencies
 ## with the inspector plugin and runtime autoload.
 
 

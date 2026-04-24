@@ -33,7 +33,7 @@ func _process_branch(n: Node) -> void:
 	for child: Node in n.get_children():
 		if child is CollisionObject3D or child is CollisionObject2D:
 			_apply_node_preset(child)
-		
+
 		else:
 			_process_branch(child)
 

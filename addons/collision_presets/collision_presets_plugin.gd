@@ -17,7 +17,7 @@ func _enter_tree() -> void:
 			CollisionPresetsConstants.SETTINGS_DIRECTORY_KEY,
 			CollisionPresetsConstants.DEFAULT_PRESETS_DIRECTORY
 		)
-	
+
 	ProjectSettings.set_initial_value(
 		CollisionPresetsConstants.SETTINGS_DIRECTORY_KEY,
 		CollisionPresetsConstants.DEFAULT_PRESETS_DIRECTORY
@@ -61,7 +61,7 @@ func _on_settings_changed() -> void:
 		CollisionPresetsConstants.SETTINGS_DIRECTORY_KEY,
 		CollisionPresetsConstants.DEFAULT_PRESETS_DIRECTORY
 	)
-	
+
 	if new_dir == last_known_directory: return
 
 	CollisionPresetsAPI.presets_db_static = null

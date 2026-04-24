@@ -16,7 +16,7 @@ static var _is_checking: bool = false
 static func _ensure_loaded() -> void:
 	if Engine.is_editor_hint():
 		check_for_external_changes()
-	
+
 	if not presets_db_static:
 		_load_static_presets()
 
@@ -62,7 +62,7 @@ static func _load_static_presets(previous_path: String = "") -> void:
 				if FileAccess.file_exists(old_names_path) and old_names_path != new_names_path:
 					print("CollisionPresets: Migrating constants script from ", old_names_path, " to ", new_names_path)
 					DirAccess.rename_absolute(old_names_path, new_names_path)
-			
+
 			else:
 				# Ensure the target directory exists for a fresh installation.
 				var dir: String = path.get_base_dir()
@@ -85,14 +85,14 @@ static func check_for_external_changes() -> bool:
 	if current_modified_time > _last_modified_time:
 		_load_static_presets()
 		return true
-	
+
 	return false
 
 
 ## Returns the preset with the given display name, or null if not found.
 static func get_preset(preset_name: String) -> CollisionPreset:
 	_ensure_loaded()
-	
+
 	for p: CollisionPreset in presets_db_static.presets:
 		if p.name == preset_name: return p
 
@@ -102,12 +102,12 @@ static func get_preset(preset_name: String) -> CollisionPreset:
 ## Returns the preset with the given unique ID, or null if not found.
 static func get_preset_by_id(id: String) -> CollisionPreset:
 	if id.is_empty(): return null
-	
+
 	_ensure_loaded()
-	
+
 	for p: CollisionPreset in presets_db_static.presets:
 		if p.id == id: return p
-	
+
 	return null
 
 
@@ -121,15 +121,15 @@ static func apply_preset(object: Node, preset_name: String) -> bool:
 
 		if CollisionPresetsConstants.PROP_COLLISION_MASK in object:
 			object.collision_mask = p.mask
-		
+
 		# Store both name and ID for robustness across renames.
 		object.set_meta(CollisionPresetsConstants.META_KEY, p.name as StringName)
 
 		if not p.id.is_empty():
 			object.set_meta(CollisionPresetsConstants.META_ID_KEY, p.id as StringName)
-		
+
 		return true
-	
+
 	return false
 
 
@@ -148,11 +148,11 @@ static func get_preset_mask(preset_name: String) -> int:
 ## Returns the display names of all currently defined presets.
 static func get_preset_names() -> Array[String]:
 	_ensure_loaded()
-	
+
 	var names: Array[String] = []
 	for p: CollisionPreset in presets_db_static.presets:
 		names.append(p.name)
-	
+
 	return names
 
 
@@ -201,19 +201,19 @@ static func set_node_preset(node: Node, preset_name: String) -> bool:
 		# Remove stored metadata and apply the default preset values.
 		if node.has_meta(CollisionPresetsConstants.META_KEY):
 			node.remove_meta(CollisionPresetsConstants.META_KEY)
-		
+
 		if node.has_meta(CollisionPresetsConstants.META_ID_KEY):
 			node.remove_meta(CollisionPresetsConstants.META_ID_KEY)
-		
+
 		var p: CollisionPreset = get_preset_by_id(presets_db_static.default_preset_id)
 
 		if p:
 			if "collision_layer" in node:
 				node.collision_layer = p.layer
-			
+
 			if "collision_mask" in node:
 				node.collision_mask = p.mask
-		
+
 		return true
 
 	if preset_name == CollisionPresetsConstants.CUSTOM_PRESET_VALUE:

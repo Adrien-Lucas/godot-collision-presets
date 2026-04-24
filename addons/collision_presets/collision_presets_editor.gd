@@ -122,7 +122,7 @@ func set_target(obj: Node) -> void:
 			layer_spin.set_block_signals(true)
 			layer_spin.value = target.collision_layer
 			layer_spin.set_block_signals(false)
-		
+
 		if CollisionPresetsConstants.PROP_COLLISION_MASK in target:
 			mask_spin.set_block_signals(true)
 			mask_spin.value = target.collision_mask
@@ -138,7 +138,7 @@ func set_target(obj: Node) -> void:
 
 		var stored_name: String = CollisionPresetsAPI.get_node_preset(target)
 		var has_any_meta: bool = (
-			target.has_meta(CollisionPresetsConstants.META_KEY) 
+			target.has_meta(CollisionPresetsConstants.META_KEY)
 			or target.has_meta(CollisionPresetsConstants.META_ID_KEY)
 		)
 
@@ -166,12 +166,12 @@ func set_target(obj: Node) -> void:
 					mask_spin.set_block_signals(true)
 					mask_spin.value = def.mask
 					mask_spin.set_block_signals(false)
-		
+
 		# Custom
 		elif stored_name == CollisionPresetsConstants.CUSTOM_PRESET_VALUE:
 			preset_dropdown.select(preset_dropdown.item_count - 1)
 			edit_button.disabled = true
-		
+
 		else:
 			# Locate the preset in the sorted list.
 			var found: int = -1
@@ -179,7 +179,7 @@ func set_target(obj: Node) -> void:
 				if sorted_presets[i].name == stored_name:
 					found = i
 					break
-			
+
 			if found >= 0:
 				# +1 accounts for the "Default" item
 				preset_dropdown.select(found + 1)
@@ -197,7 +197,7 @@ func set_target(obj: Node) -> void:
 					layer_spin.set_block_signals(true)
 					layer_spin.value = p.layer
 					layer_spin.set_block_signals(false)
-				
+
 				if (
 					CollisionPresetsConstants.PROP_COLLISION_MASK in target
 					and target.collision_mask != p.mask
@@ -206,7 +206,7 @@ func set_target(obj: Node) -> void:
 					mask_spin.set_block_signals(true)
 					mask_spin.value = p.mask
 					mask_spin.set_block_signals(false)
-			
+
 			# Custom (preset not found)
 			else:
 				preset_dropdown.select(preset_dropdown.item_count - 1)
@@ -447,7 +447,7 @@ func _on_new_pressed() -> void:
 	name_input.name = "NameInput"
 	name_input.placeholder_text = "Enter name here..."
 	vbox.add_child(name_input)
-	
+
 	dialog.confirmed.connect(func():
 		var new_name: String = name_input.text.strip_edges()
 		if new_name.is_empty():
@@ -460,7 +460,7 @@ func _on_new_pressed() -> void:
 		if is_instance_valid(target):
 			if CollisionPresetsConstants.PROP_COLLISION_LAYER in target:
 				new_layer = target.collision_layer
-			
+
 			if CollisionPresetsConstants.PROP_COLLISION_MASK in target:
 				new_mask = target.collision_mask
 
@@ -475,7 +475,7 @@ func _on_new_pressed() -> void:
 
 		dialog.queue_free()
 	)
-	
+
 	name_input.text_submitted.connect(func(_text: String) -> void:
 		dialog.confirmed.emit()
 		dialog.hide()
@@ -484,7 +484,7 @@ func _on_new_pressed() -> void:
 	dialog.canceled.connect(func() -> void:
 		dialog.queue_free()
 	)
-	
+
 	add_child(dialog)
 	dialog.popup_centered()
 	name_input.grab_focus()
@@ -518,16 +518,16 @@ func _save_preset(p_name: String, p_layer: int, p_mask: int, p: CollisionPreset 
 	var old_name: String = ""
 	if p:
 		old_name = p.name
-	
+
 	else:
 		p = CollisionPreset.new()
 		p.id = _generate_uid()
 		database.presets.append(p)
-	
+
 	p.name = p_name
 	p.layer = p_layer
 	p.mask = p_mask
-	
+
 	_save_database()
 	_refresh_dropdown()
 	CollisionPresetsAPI.generate_preset_constants_script(database)
@@ -617,10 +617,10 @@ func _on_set_default_pressed() -> void:
 func _refresh_dropdown() -> void:
 	preset_dropdown.clear()
 	var default_p: CollisionPreset = CollisionPresetsAPI.get_preset_by_id(database.default_preset_id)
-	
+
 	if default_p == null:
 		preset_dropdown.add_item("Default (None)")
-	
+
 	else:
 		preset_dropdown.add_item("Default (%s)" % default_p.name)
 
@@ -643,7 +643,7 @@ func _load_or_create() -> void:
 	CollisionPresetsAPI._load_static_presets()
 	if CollisionPresetsAPI.presets_db_static != null:
 		database = CollisionPresetsAPI.presets_db_static
-	
+
 	else:
 		database = CollisionPresetsDatabase.new()
 		_save_database()
@@ -673,7 +673,7 @@ func _load_or_create() -> void:
 		if p.id.is_empty():
 			p.id = _generate_uid()
 			changed = true
-	
+
 	if changed or migration_needed:
 		_save_database()
 
